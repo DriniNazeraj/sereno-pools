@@ -1,0 +1,62 @@
+[
+  {
+    "slug": "finished-pool",
+    "grade": "day",
+    "widths": [
+      640,
+      1200
+    ],
+    "w": 1200,
+    "h": 675
+  },
+  {
+    "slug": "dusk-pool",
+    "grade": "dusk",
+    "widths": [
+      640,
+      1200
+    ],
+    "w": 1200,
+    "h": 684
+  },
+  {
+    "slug": "night-glass",
+    "grade": "night",
+    "widths": [
+      640,
+      992
+    ],
+    "w": 992,
+    "h": 656
+  },
+  {
+    "slug": "golden-hour",
+    "grade": "golden",
+    "widths": [
+      640,
+      1200
+    ],
+    "w": 1200,
+    "h": 548
+  },
+  {
+    "slug": "coping-detail",
+    "grade": "day",
+    "widths": [
+      640,
+      864
+    ],
+    "w": 864,
+    "h": 464
+  },
+  {
+    "slug": "night-water",
+    "grade": "night",
+    "widths": [
+      640,
+      960
+    ],
+    "w": 960,
+    "h": 560
+  }
+]

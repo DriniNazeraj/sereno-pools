@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-ssr
+*.log
+*.local
+.env
+.env*.local
+__pycache__
+*.tsbuildinfo
+.DS_Store
