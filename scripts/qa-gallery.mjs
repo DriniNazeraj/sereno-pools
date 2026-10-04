@@ -16,8 +16,10 @@ const VPS = [
   ["1920-dpr2", { viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 2 }],
   ["390", { viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true }],
 ];
+const LB_IDX = (process.env.LB_IDX || "0,5").split(",").map(Number); // lightbox items to open (0-based grid order)
+const ONLY = process.env.ONLY_VP ? process.env.ONLY_VP.split(",") : null; // e.g. ONLY_VP=1440-dpr2
 const results = {};
-for (const [tag, opts, lightbox] of VPS) {
+for (const [tag, opts, lightbox] of VPS.filter(([t]) => !ONLY || ONLY.includes(t))) {
   const ctx = await browser.newContext(opts);
   const page = await ctx.newPage();
   const errors = [];
@@ -64,7 +66,7 @@ for (const [tag, opts, lightbox] of VPS) {
   const shifts = await page.evaluate(() => window.__shifts);
   let lb = null;
   if (lightbox) {
-    for (const idx of [0, 5]) {
+    for (const idx of LB_IDX) {
       await page.evaluate((k) => document.querySelectorAll("#gallery ul button")[k].scrollIntoView({ block: "center" }), idx);
       await wait(400);
       await page.evaluate((k) => document.querySelectorAll("#gallery ul button")[k].click(), idx);
@@ -72,7 +74,7 @@ for (const [tag, opts, lightbox] of VPS) {
       await wait(1200);
       const d = await page.evaluate(() => { const i = document.querySelector("[role=dialog] img"); const r = i.getBoundingClientRect(); return { src: i.currentSrc.replace(location.origin, ""), natural: `${i.naturalWidth}x${i.naturalHeight}`, css: `${Math.round(r.width)}x${Math.round(r.height)}`, rect: { x: r.x, y: r.y, width: r.width, height: r.height } }; });
       await page.screenshot({ path: `${OUT}/${PREFIX}-${tag}-lightbox-${idx}.png` });
-      (lb ||= []).push(d);
+      (lb ||= []).push({ idx, ...d });
       await page.keyboard.press("Escape");
       await wait(500);
     }
