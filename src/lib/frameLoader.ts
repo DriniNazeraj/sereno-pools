@@ -75,8 +75,11 @@ function firstRealScroll(isCancelled: () => boolean) {
  * Streams a frame set in three steps:
  *  1. frame 0: taken from the server-rendered <img fetchpriority="high"> (no second request) when it
  *     shows the same file, otherwise fetched;
- *  2. after the first paint: the rest of stage 01 (resolves `stage1`);
- *  3. only after the visitor's first real scroll (see firstRealScroll): stages 02-04.
+ *  2. after the first paint: the rest of the upfront set (resolves `stage1`). That is every frame in
+ *     stage 01, unless the set lists `prescroll` (the HD set: six frames spread across stage 1);
+ *  3. only after the visitor's first real scroll (see firstRealScroll): everything else. For a set
+ *     without `prescroll` that is stages 02-04; for HD it is the other 114 frames, including the rest
+ *     of stage 1.
  * Frames are fetched by a small worker pool that always picks the not-yet-requested frame nearest to
  * the current scroll target (`getTarget`), so a fast flick to the end of the hero fetches the end
  * frames first instead of waiting for every frame in between. Until a frame arrives the canvas keeps
@@ -92,8 +95,11 @@ export function loadFrames(
 ) {
   let cancelled = false;
   const perStage = Math.ceil(set.count / stages);
+  // HD lists a sparse upfront set. Desktop and mobile pass nothing and still prefetch all of stage 1.
+  const prescroll = set.prescroll;
+  const upfrontTotal = prescroll ? prescroll.length : perStage;
   const requested = new Uint8Array(set.count);
-  let limit = perStage; // frames [0, limit) may be fetched; grows to set.count after the first real scroll
+  let full = false; // after the first real scroll every frame may be fetched
   let s1 = 0;
   let done = 0;
   let resolveStage1!: () => void;
@@ -103,11 +109,13 @@ export function loadFrames(
   let wake: (() => void) | null = null;
   const unlocked = new Promise<void>((r) => (wake = r));
 
+  const inUpfront = (i: number) => (prescroll ? prescroll.includes(i) : i < perStage);
+
   const settle = (i: number) => {
     done++;
-    if (i < perStage && ++s1 <= perStage) {
-      onProgress(s1, perStage);
-      if (s1 === perStage) resolveStage1();
+    if (inUpfront(i) && ++s1 <= upfrontTotal) {
+      onProgress(s1, upfrontTotal);
+      if (s1 === upfrontTotal) resolveStage1();
     }
     if (done === set.count) resolveAll();
   };
@@ -122,12 +130,14 @@ export function loadFrames(
     settle(i);
   };
 
-  /** Not-yet-requested frame in [0, limit) nearest to the scroll target (ties: the earlier frame). */
+  /** Not-yet-requested frame the visitor is allowed to fetch, nearest the scroll target (ties: the earlier frame). */
+  const allowed = (i: number) => i >= 0 && i < set.count && !requested[i] && (full || inUpfront(i));
   const pick = () => {
-    const t = Math.min(limit - 1, Math.max(0, Math.round(getTarget())));
-    for (let d = 0; d < limit; d++) {
-      if (t - d >= 0 && !requested[t - d]) return t - d;
-      if (t + d < limit && !requested[t + d]) return t + d;
+    const hi = full ? set.count : perStage;
+    const t = Math.min(hi - 1, Math.max(0, Math.round(getTarget())));
+    for (let d = 0; d < set.count; d++) {
+      if (allowed(t - d)) return t - d;
+      if (d > 0 && allowed(t + d)) return t + d;
     }
     return -1;
   };
@@ -137,7 +147,7 @@ export function loadFrames(
       if (cancelled) return;
       const i = pick();
       if (i < 0) {
-        if (limit < set.count) { await unlocked; continue; }
+        if (!full) { await unlocked; continue; }
         return;
       }
       requested[i] = 1;
@@ -171,7 +181,7 @@ export function loadFrames(
 
   const rest = firstRealScroll(() => cancelled).then(async (why) => {
     performance.mark?.(`frames-rest-start:${why}`);
-    limit = set.count;
+    full = true;
     wake?.();
     await all;
     return why;

@@ -10,6 +10,9 @@
  *  - mobile:  60 frames, 720x900 WebP (designer's portrait crop, unchanged).
  *  - hd:      120 frames, 1920x1080 WebP for wide / high-DPI screens (see HD_MEDIA), rendered by
  *    design/hero-stages/make_frames.py from the Real-ESRGAN 2560x1440 stage sources in design/hero-stages/hd-2560/.
+ *    Before the first real scroll only `hd.prescroll` is fetched (frame 1 plus five more, spread across
+ *    stage 1). The other 114 stream in nearest-first after that scroll. Desktop and mobile still prefetch
+ *    the whole of stage 1.
  * width/height below are the REAL pixel dimensions of the files (used for <img width/height> and cover math).
  */
 export type FrameSet = {
@@ -18,12 +21,17 @@ export type FrameSet = {
   count: number;
   width: number;
   height: number;
+  /**
+   * 0-based frames fetched before the first real scroll. Omit to prefetch every frame in stage 1.
+   * HD only: 1-based frames 1, 6, 12, 18, 24, 30 (about 1.2 MB instead of all 30 stage-1 frames).
+   */
+  prescroll?: readonly number[];
 };
 
 export const FRAME_SETS: Record<FrameSet["name"], FrameSet> = {
   desktop: { name: "desktop", dir: "/frames/desktop", count: 120, width: 1280, height: 720 },
   mobile: { name: "mobile", dir: "/frames/mobile", count: 60, width: 720, height: 900 },
-  hd: { name: "hd", dir: "/frames/hd", count: 120, width: 1920, height: 1080 },
+  hd: { name: "hd", dir: "/frames/hd", count: 120, width: 1920, height: 1080, prescroll: [0, 5, 11, 17, 23, 29] },
 };
 
 /** Viewports narrower than this load the portrait (mobile) set. */

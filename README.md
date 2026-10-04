@@ -59,10 +59,13 @@ so the back end (`api/contact.ts`) can import and reuse it.
 - `public/frames/desktop/`: 120 x 1280x720 WebP (<= 60 KB each). `public/frames/mobile/`: 60 x 720x900 WebP.
 - Source: `design/hero-stages/` (designer's four AI-generated stage renders + `make_frames.py`).
 - Loading (`src/lib/frameLoader.ts`): the first frame is a real `<img fetchpriority="high">` (LCP-safe, no-JS
-  fallback); the rest of stage 01 loads after first paint, shown by a thin progress line (no loading screen);
-  stages 02 to 04 load only after the visitor's first real scroll: a wheel, a touch drag, a scroll key, or the
-  page moving more than 24 px (a nav-link jump or a scripted `scrollTo` also counts). There is no idle or timer
-  fallback, so visitors who never scroll download stage 01 only. A reload that restores the page part-way down
+  fallback); the rest of stage 01 loads after first paint, shown by a thin progress line (no loading screen).
+  The HD set is the exception: before scroll it loads six frames spread across stage 1 (1, 6, 12, 18, 24, 30,
+  about 1.2 MB) and streams the other 114 on the first real scroll. Desktop and mobile still prefetch all of
+  stage 01. Stages 02 to 04 (and, for HD, the rest of stage 1) load only after the visitor's first real scroll:
+  a wheel, a touch drag, a scroll key, or the page moving more than 24 px (a nav-link jump or a scripted
+  `scrollTo` also counts). There is no idle or timer fallback, so visitors who never scroll download only that
+  upfront set. A reload that restores the page part-way down
   loads them straight away. A small worker pool always fetches the not-yet-loaded frame nearest the current
   scroll position, so a fast flick to the end fetches the end frames first. The canvas always draws the nearest
   loaded frame and never goes blank. Save-Data, 2g/3g and `prefers-reduced-motion` get the static final frame
