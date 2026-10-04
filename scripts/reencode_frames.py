@@ -28,9 +28,8 @@ _render = None
 def renderer():
     global _render
     if _render is None:
-        src = open(os.path.join(STAGES, "make_frames.py")).read().split("for name, count")[0]
-        src = src.replace("OUT = sys.argv[1]", "OUT = None").replace(
-            "S = os.path.dirname(os.path.abspath(__file__))", f"S = {STAGES!r}")
+        src = open(os.path.join(STAGES, "make_frames.py")).read().split('if __name__ == "__main__":')[0]
+        src = src.replace("S = os.path.dirname(os.path.abspath(__file__))", f"S = {STAGES!r}")
         mod = types.ModuleType("make_frames"); exec(src, mod.__dict__); _render = mod.render
     return _render
 

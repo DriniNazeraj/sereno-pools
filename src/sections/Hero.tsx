@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CAPTIONS, FRAME_SETS, MOBILE_BREAKPOINT, SCRUB, STAGES, frameUrl, type FrameSet } from "@/config/hero";
+import { CAPTIONS, FRAME_SETS, HD_MEDIA, MOBILE_MEDIA, SCRUB, STAGES, frameUrl, pickFrameSet, type FrameSet } from "@/config/hero";
 import { loadFrames, type Frame } from "@/lib/frameLoader";
 import { loadGsap } from "@/lib/gsap";
 import type { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -34,7 +34,7 @@ export function Hero() {
       setLoaderDone(true);
       return;
     }
-    const set: FrameSet = window.innerWidth < MOBILE_BREAKPOINT ? FRAME_SETS.mobile : FRAME_SETS.desktop;
+    const set: FrameSet = pickFrameSet();
     const frames: (Frame | undefined)[] = new Array(set.count);
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d", { alpha: false })!;
@@ -44,6 +44,12 @@ export function Hero() {
     let lastStage = 0;
     let firstDraw = false;
 
+    // Backing store = CSS size x DPR (capped at 2), so the canvas is never drawn small and stretched.
+    // Resizing a canvas resets its 2D state, so smoothing is (re)applied after every resize and before drawing.
+    const smooth = () => {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+    };
     const size = () => {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       const w = Math.round(canvas.clientWidth * dpr);
@@ -53,6 +59,7 @@ export function Hero() {
         canvas.height = h;
         drawn = -1;
       }
+      smooth();
     };
 
     // Nearest loaded frame to i (prefers the exact frame; frames stream in, so gaps are normal).
@@ -75,6 +82,7 @@ export function Hero() {
         const ih = "naturalHeight" in img ? img.naturalHeight : img.height;
         const s = Math.max(canvas.width / iw, canvas.height / ih);
         const dw = iw * s, dh = ih * s;
+        smooth();
         ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
         drawn = idx;
         canvas.dataset.frame = String(idx); // QA hook: frame on screen
@@ -176,8 +184,9 @@ export function Hero() {
   }, []);
 
   const isStatic = mode === "static";
-  const last = FRAME_SETS.desktop.count;
-  const lastM = FRAME_SETS.mobile.count;
+  // First frame (or, in the static fallback, the last frame) of a set; the <picture> picks the set with the
+  // same media queries the JS uses (pickFrameSet) and index.html preloads.
+  const poster = (set: FrameSet) => frameUrl(set, isStatic ? set.count - 1 : 0);
 
   return (
     <section id="top" aria-labelledby="hero-title" className={cn("relative", isStatic && "hero-static")}>
@@ -185,15 +194,11 @@ export function Hero() {
         <div className={cn("hero-stage", isStatic && "!static !h-auto min-h-[100svh]")}>
           <div className="hero-media">
             <picture>
-              <source
-                media={`(max-width: ${MOBILE_BREAKPOINT - 0.02}px)`}
-                srcSet={isStatic ? frameUrl(FRAME_SETS.mobile, lastM - 1) : frameUrl(FRAME_SETS.mobile, 0)}
-                width={FRAME_SETS.mobile.width}
-                height={FRAME_SETS.mobile.height}
-              />
+              <source media={MOBILE_MEDIA} srcSet={poster(FRAME_SETS.mobile)} width={FRAME_SETS.mobile.width} height={FRAME_SETS.mobile.height} />
+              <source media={HD_MEDIA} srcSet={poster(FRAME_SETS.hd)} width={FRAME_SETS.hd.width} height={FRAME_SETS.hd.height} />
               <img
                 ref={imgRef}
-                src={isStatic ? frameUrl(FRAME_SETS.desktop, last - 1) : frameUrl(FRAME_SETS.desktop, 0)}
+                src={poster(FRAME_SETS.desktop)}
                 width={FRAME_SETS.desktop.width}
                 height={FRAME_SETS.desktop.height}
                 alt={isStatic ? "Finished backyard pool with stone coping behind a modern Texas house (AI-generated placeholder render)" : "Lawn behind a modern Texas house, before the pool build (AI-generated placeholder render)"}

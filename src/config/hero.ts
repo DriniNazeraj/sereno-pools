@@ -8,10 +8,12 @@
  *  - desktop: 120 frames, 1280x720 WebP, <= 60 KB each (scripts/reencode_frames.py, from the designer's
  *    lossless stage renders; originals backed up at /workspace/sereno/frames-designer-originals/).
  *  - mobile:  60 frames, 720x900 WebP (designer's portrait crop, unchanged).
+ *  - hd:      120 frames, 1920x1080 WebP for wide / high-DPI screens (see HD_MEDIA), rendered by
+ *    design/hero-stages/make_frames.py from the Real-ESRGAN 2560x1440 stage sources in design/hero-stages/hd-2560/.
  * width/height below are the REAL pixel dimensions of the files (used for <img width/height> and cover math).
  */
 export type FrameSet = {
-  name: "desktop" | "mobile";
+  name: "desktop" | "mobile" | "hd";
   dir: string;
   count: number;
   width: number;
@@ -21,10 +23,28 @@ export type FrameSet = {
 export const FRAME_SETS: Record<FrameSet["name"], FrameSet> = {
   desktop: { name: "desktop", dir: "/frames/desktop", count: 120, width: 1280, height: 720 },
   mobile: { name: "mobile", dir: "/frames/mobile", count: 60, width: 720, height: 900 },
+  hd: { name: "hd", dir: "/frames/hd", count: 120, width: 1920, height: 1080 },
 };
 
 /** Viewports narrower than this load the portrait (mobile) set. */
 export const MOBILE_BREAKPOINT = 900;
+/** Portrait (phone) set. */
+export const MOBILE_MEDIA = `(max-width: ${MOBILE_BREAKPOINT - 0.02}px)`;
+/**
+ * HD set: viewport >= 1280 CSS px AND viewport x DPR > 1400 device px, i.e. width > 1400 px at DPR 1,
+ * or >= 1280 px at DPR >= 1.1 (zoomed / scaled laptops, Retina, 4K).
+ * The SAME query drives the <picture> <source>, the <link rel="preload"> in index.html (keep in sync) and
+ * the JS set choice, so the preloaded first frame is always the one the canvas uses.
+ */
+export const HD_MEDIA =
+  "(min-width: 1401px), (min-width: 1280px) and (min-resolution: 1.1dppx), (min-width: 1280px) and (-webkit-min-device-pixel-ratio: 1.1)";
+
+/** Picks the frame set for the current viewport (browser only). */
+export function pickFrameSet(): FrameSet {
+  if (window.matchMedia(MOBILE_MEDIA).matches) return FRAME_SETS.mobile;
+  if (window.matchMedia(HD_MEDIA).matches) return FRAME_SETS.hd;
+  return FRAME_SETS.desktop;
+}
 export const STAGES = 4;
 /** Scroll length of the pin, in viewport heights (one per stage). Keep in sync with .hero-track in index.css. */
 export const PIN_VH = 400;
