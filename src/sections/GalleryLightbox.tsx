@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Picture } from "@/components/Picture";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { ITEMS } from "./galleryItems";
+import { ITEMS, lightboxSizes } from "./galleryItems";
 
 /** Lightbox (Radix Dialog). Lazy-loaded chunk: only fetched when a visitor opens (or hovers) a gallery image. */
 export default function GalleryLightbox({ index, setIndex }: { index: number | null; setIndex: (fn: (i: number | null) => number | null) => void }) {
@@ -35,11 +35,11 @@ export default function GalleryLightbox({ index, setIndex }: { index: number | n
               <Picture
                 key={item.slug}
                 slug={item.slug}
-                widths={item.widths}
+                widths={item.full}
                 width={item.w}
                 height={item.h}
                 alt={item.alt}
-                sizes="90vw"
+                sizes={lightboxSizes(item)}
                 eager
                 className="contents"
                 imgClassName="max-h-[78svh] w-auto max-w-full rounded-md object-contain"

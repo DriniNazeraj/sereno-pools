@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState } from "react";
 import { Picture } from "@/components/Picture";
-import { ITEMS } from "./galleryItems";
+import { GRID_SIZES, ITEMS } from "./galleryItems";
 
 const loadLightbox = () => import("./GalleryLightbox");
 const GalleryLightbox = lazy(loadLightbox);
@@ -41,11 +41,11 @@ export function Gallery() {
               >
                 <Picture
                   slug={it.slug}
-                  widths={it.widths}
+                  widths={it.grid}
                   width={it.w}
                   height={it.h}
                   alt={it.alt}
-                  sizes="(min-width: 1200px) 400px, (min-width: 900px) 31vw, (min-width: 640px) 46vw, 92vw"
+                  sizes={GRID_SIZES}
                   imgClassName="block h-auto w-full transition-transform duration-[600ms] ease-out-expo group-hover:scale-[1.03]"
                 />
                 <span className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end bg-gradient-to-t from-forest-950/70 to-transparent p-5 pt-16 text-left text-[14px] font-medium text-white opacity-0 transition-opacity duration-[320ms] group-hover:opacity-100 group-focus-visible:opacity-100">

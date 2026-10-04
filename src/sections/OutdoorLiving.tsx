@@ -30,11 +30,12 @@ export function OutdoorLiving() {
       <div ref={img} className="absolute inset-x-0 -top-[10%] h-[120%] will-change-transform">
         <Picture
           slug="outdoor-living"
-          widths={[1280, 1920]}
-          width={1920}
-          height={1080}
+          widths={[800, 1600, 2400, 3200]}
+          width={3200}
+          height={1800}
           alt="The pool lit at night with warm light from the house (AI-generated placeholder)"
-          sizes="100vw"
+          /* object-cover in a box 120% of a min-h-[90svh] section: rendered width = max(100vw, 1.2 x 90vh x 16/9) */
+          sizes="max(100vw, 192vh)"
           imgClassName="h-full w-full object-cover"
         />
       </div>

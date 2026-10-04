@@ -13,3 +13,8 @@ These four images are AI-generated placeholders for the Sereno Pools hero. They 
 - `python3 make_frames.py <out_dir> hd` renders `hd/` (120 frames, 1920x1080, WebP q50, ~205 KB/frame, ~24 MB total) with the same motion, crossfades and crop as `desktop/`. Copy it to `site/public/frames/hd/`.
 - `hd2560` (2560x1440) also works but is ~36 MB per sequence, so it is not shipped.
 - The site uses `hd/` when the viewport is >= 1401 CSS px, or >= 1280 CSS px at DPR >= 1.1 (see `HD_MEDIA` in `src/config/hero.ts`); 900-1400 px at DPR 1 keeps `desktop/` (1280x720), phones keep `mobile/` (720x900).
+
+## 4x source for the gallery / outdoor-living photos (hd-5120/)
+
+- `hd-5120/stage-04-finish.webp` (lossless, 5120x2880) is stage 04 run through the same Real-ESRGAN x4plus + SwinIR-L 50/50 blend as `hd-2560/`, kept at the models' native 4x instead of being downscaled to 2560 (downscaled, it matches `hd-2560/stage-04-finish.png` to within 0.2/255 on average). It was made with `upscale_stages.upscale()` and `OUT_W, OUT_H = 5120, 2880`.
+- `scripts/make_placeholder_photos.py` cuts the six gallery photos and the outdoor-living night shot from it. The gallery crops are tight (the smallest is 540 px wide in the 1280 render, which is 2160 px at 4x), so every exported size (about 800/1600/2400 px, WebP q80 + AVIF q65) is a downscale. `scripts/make_og.py` renders the OG image from it too (downscaled to 2560x1440, i.e. the `hd-2560/` version).
