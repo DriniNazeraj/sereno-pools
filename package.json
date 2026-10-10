@@ -9,6 +9,7 @@
     "preview": "vite preview --host 0.0.0.0 --port 4173 --strictPort",
     "images": "python3 scripts/make_placeholder_photos.py",
     "typecheck": "tsc -b",
+    "test": "vitest run",
     "build:preview": "npm run build",
     "frames:encode": "python3 scripts/reencode_frames.py desktop 60",
     "frames:illustrated": "python3 scripts/generate_frames.py",
@@ -30,6 +31,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.89.0",
+    "resend": "^6.31.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -44,6 +46,7 @@
     "tailwindcss": "^3.4.19",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.9.3",
-    "vite": "^5.4.21"
+    "vite": "^5.4.21",
+    "vitest": "^3.2.7"
   }
 }

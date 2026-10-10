@@ -54,6 +54,9 @@ Vite env files. There is no committed `.env`. Create one with `cp .env.example .
 The zod schema (`src/lib/contact-schema.ts`, with the honeypot field) has no browser or Vite dependencies,
 so the back end (`api/contact.ts`) can import and reuse it.
 
+Server setup for that function (Resend env vars, `vercel dev`, and the in-memory rate limit) is `docs/backend.md`.
+`npm run build` still requires `VITE_SITE_URL` in the environment; Vercel needs that public variable plus the server-only contact variables.
+
 ## Hero frames
 
 - `public/frames/desktop/`: 120 x 1280x720 WebP (<= 60 KB each). `public/frames/mobile/`: 60 x 720x900 WebP.
